@@ -36,7 +36,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('weight', models.IntegerField(default=0)),
-                ('page', models.ForeignKey(to='quizzer-app.Page')),
+                ('page', models.ForeignKey(to='quizzerapp.Page')),
             ],
             options={
                 'ordering': ['weight'],
@@ -69,8 +69,8 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('weight', models.IntegerField(default=0)),
-                ('page', models.ForeignKey(to='quizzer-app.Page')),
-                ('questionnaire', models.ForeignKey(to='quizzer-app.Questionnaire')),
+                ('page', models.ForeignKey(to='quizzerapp.Page')),
+                ('questionnaire', models.ForeignKey(to='quizzerapp.Questionnaire')),
             ],
             options={
                 'ordering': ['weight'],
@@ -83,7 +83,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('result_text', models.CharField(max_length=1000)),
                 ('upper_limit', models.IntegerField(default=0)),
-                ('questionnaire', models.ForeignKey(to='quizzer-app.Questionnaire')),
+                ('questionnaire', models.ForeignKey(to='quizzerapp.Questionnaire')),
             ],
             options={
             },
@@ -92,25 +92,25 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='questionnaire',
             name='pages',
-            field=models.ManyToManyField(to='quizzer-app.Page', through='quizzer-app.QuestionnairePage'),
+            field=models.ManyToManyField(to='quizzerapp.Page', through='quizzerapp.QuestionnairePage'),
             preserve_default=True,
         ),
         migrations.AddField(
             model_name='pagequestion',
             name='question',
-            field=models.ForeignKey(to='quizzer-app.Question'),
+            field=models.ForeignKey(to='quizzerapp.Question'),
             preserve_default=True,
         ),
         migrations.AddField(
             model_name='page',
             name='questions',
-            field=models.ManyToManyField(to='quizzer-app.Question', through='quizzer-app.PageQuestion'),
+            field=models.ManyToManyField(to='quizzerapp.Question', through='quizzerapp.PageQuestion'),
             preserve_default=True,
         ),
         migrations.AddField(
             model_name='answer',
             name='question',
-            field=models.ForeignKey(to='quizzer-app.Question'),
+            field=models.ForeignKey(to='quizzerapp.Question'),
             preserve_default=True,
         ),
     ]
