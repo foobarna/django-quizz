@@ -6,7 +6,16 @@ LONG_TEXT = 1000
 
 
 class Question(models.Model):
+    SINGLE = 'sg'
+    MULTIPLE = 'mp'
+    QUESTION_TYPE_CHOICES = (
+        (SINGLE, 'Single answer'),
+        (MULTIPLE, 'Multiple answers'),
+    )
     question_text = models.CharField(max_length=MEDIUM_TEXT)
+    question_type = models.CharField(max_length=2,
+                                     choices=QUESTION_TYPE_CHOICES,
+                                     default=SINGLE)
 
     def __unicode__(self):
         return self.question_text
