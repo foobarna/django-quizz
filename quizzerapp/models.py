@@ -43,6 +43,9 @@ class PageQuestion(models.Model):
     page = models.ForeignKey(Page)
     question = models.ForeignKey(Question)
 
+    def __unicode__(self):
+        return "%s : %s" % (self.page, self.question)
+
     class Meta:
         ordering = ["weight"]
 
@@ -53,13 +56,16 @@ class Questionnaire(models.Model):
     pages = models.ManyToManyField(Page, through="QuestionnairePage")
 
     def __unicode__(self):
-        return "%s : %s" % (self.name, self.description)
+        return self.name
 
 
 class QuestionnairePage(models.Model):
     weight = models.IntegerField(default=0)
     questionnaire = models.ForeignKey(Questionnaire)
     page = models.ForeignKey(Page)
+
+    def __unicode__(self):
+        return "%s : %s" % (self.questionnaire, self.page)
 
     class Meta:
         ordering = ["weight"]
