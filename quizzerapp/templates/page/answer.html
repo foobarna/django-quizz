@@ -1,0 +1,13 @@
+<h2>{{ questionnaire.name }}</h2>
+
+<h3>{{ page.name }}</h3>
+
+{% if questions_list %}
+    <ul>
+    {% for question in questions_list %}
+        <li>{{ question.question_text }}</li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No questions are available.</p>
+{% endif %}
