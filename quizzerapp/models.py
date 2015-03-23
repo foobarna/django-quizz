@@ -6,6 +6,7 @@ LONG_TEXT = 1000
 
 
 class Question(models.Model):
+    """Question model that has Questionnaire and Answer sets."""
     SINGLE = 'sg'
     MULTIPLE = 'mp'
     QUESTION_TYPE_CHOICES = (
@@ -16,6 +17,14 @@ class Question(models.Model):
     question_type = models.CharField(max_length=2,
                                      choices=QUESTION_TYPE_CHOICES,
                                      default=SINGLE)
+
+    def html_type(self):
+        """Returns the html type of the question: radio or checkbox (default)."""
+        html_types = {
+            Question.SINGLE: "radio",
+            Question.MULTIPLE: "checkbox",
+        }
+        return html_types.get(self.question_type, "checkbox")
 
     def __unicode__(self):
         return self.question_text

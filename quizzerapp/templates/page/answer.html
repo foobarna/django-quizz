@@ -1,13 +1,32 @@
-<h2>{{ questionnaire.name }}</h2>
+<body>
+    <h1>{{ questionnaire.name }}</h1>
 
-<h3>{{ page.name }}</h3>
+    <h2>{{ page.name }}</h2>
 
-{% if questions_list %}
-    <ul>
-    {% for question in questions_list %}
-        <li>{{ question.question_text }}</li>
-    {% endfor %}
-    </ul>
-{% else %}
-    <p>No questions are available.</p>
-{% endif %}
+    {% if error_message %}
+        <p><strong>Error</strong> {{ error_message }}</p>
+    {% endif %}
+
+    <form action="{{ url_next }}" method="POST">
+    {% csrf_token %}
+        {% if questions %}
+        <ul>
+        {% for question in questions %}
+            <li>{{ question.question_text }}</li>
+            {% with answers=question.answer_set.all %}
+                {% if answers %}
+                    {% for answer in answers %}
+                        <input type="{{ question.html_type }}" name="question-{{ question.id }}" id="question-{{ question.id }}-answer-{{ answer.id }}" value="{{ answer.id }}"/>
+                        <label for="question-{{ question.id }}-answer-{{ answer.id }}">{{ answer.answer_text }}</label>
+                        <br/>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>No questions are available.</p>
+    {% endif %}
+    <input type="submit" value="Next"/>
+    </form>
+</body>
