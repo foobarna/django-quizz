@@ -1,2 +1,6 @@
 <h2>{{ questionnaire.name }}</h2>
 <p>{{ questionnaire.description }}</p>
+<br/>
+<br/>
+<a href="{% url 'quizzer:page' questionnaire.id '1' %}">Start the quizz</a>
+

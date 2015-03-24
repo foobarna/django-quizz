@@ -16,8 +16,8 @@
             {% with answers=question.answer_set.all %}
                 {% if answers %}
                     {% for answer in answers %}
-                        <input type="{{ question.html_type }}" name="question-{{ question.id }}" id="question-{{ question.id }}-answer-{{ answer.id }}" value="{{ answer.id }}"/>
-                        <label for="question-{{ question.id }}-answer-{{ answer.id }}">{{ answer.answer_text }}</label>
+                        <input type="{{ question.html_type }}" name="{{ question.html_name }}" id="{{ answer.html_id }}" value="{{ answer.id }}"/>
+                        <label for="{{ answer.html_id }}">{{ answer.answer_text }}</label>
                         <br/>
                     {% endfor %}
                 {% endif %}
@@ -27,6 +27,6 @@
     {% else %}
         <p>No questions are available.</p>
     {% endif %}
-    <input type="submit" value="Next"/>
+    <input type="submit" value="Submit"/>
     </form>
 </body>

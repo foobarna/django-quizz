@@ -26,6 +26,9 @@ class Question(models.Model):
         }
         return html_types.get(self.question_type, "checkbox")
 
+    def html_name(self):
+        return "question-%s" % self.id
+
     def __unicode__(self):
         return self.question_text
 
@@ -37,6 +40,9 @@ class Answer(models.Model):
 
     def __unicode__(self):
         return self.answer_text
+
+    def html_id(self):
+        return "question-%s-answer-%s" % (self.question.id, self.id)
 
 
 class Page(models.Model):
