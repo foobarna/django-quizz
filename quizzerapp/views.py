@@ -23,10 +23,40 @@ def questionnaire_result(request, questionnaire_id):
     return render(request, 'questionnaire/result.html', {'questionnaire': questionnaire})
 
 
-class PageView(View):
-    def render_page_questions(self, request, questionnaire_id, page_order, error_message=None, *args, **kwargs):
-        page_index = int(page_order) - 1
+class PageAnswerValidateException(Exception):
+    """Exception for PageView."""
+    pass
 
+
+class PageView(View):
+    def get(self, request, questionnaire_id, page_order, *args, **kwargs):
+        """GET method."""
+        page_order = int(page_order)
+        return self.render_page_questions(request, questionnaire_id, page_order, args, kwargs)
+
+    def post(self, request, questionnaire_id, page_order, *args, **kwargs):
+        """POST method."""
+        page_order = int(page_order)
+        try:
+            self.validate_answer(request.POST)
+            total_pages = Page.objects.filter(questionnairepage__questionnaire__id=questionnaire_id).count()
+            url_kwargs = {
+                'questionnaire_id': questionnaire_id
+            }
+            if page_order == total_pages:
+                url_next = reverse('quizzer:result', kwargs=url_kwargs)
+            else:
+                url_kwargs['page_order'] = page_order + 1
+                url_next = reverse('quizzer:page', kwargs=url_kwargs)
+
+            return redirect(url_next)
+        except PageAnswerValidateException as ex:
+            return self.render_page_questions(request, questionnaire_id, page_order, ex.message, args, kwargs)
+
+    def get_page_questions(self, questionnaire_id, page_order):
+        """Returns the Questionnaire, Questionnaire's Page and Page's Questions objects based on page order and
+        questionnaire's id."""
+        page_index = page_order - 1
         questionnaire = Questionnaire.objects.get(pk=questionnaire_id)
 
         page = Page.objects \
@@ -40,29 +70,28 @@ class PageView(View):
             .order_by('pagequestion__weight') \
             .filter(pagequestion__page=page) \
             .all()
+        return questionnaire, page, questions
 
-        total_pages = Page.objects.filter(questionnairepage__questionnaire=questionnaire).count()
-        url_kwargs = {
-            'questionnaire_id': questionnaire_id
-        }
-        if page_index + 1 == total_pages:
-            url_next = reverse('quizzer:result', kwargs=url_kwargs)
-        else:
-            url_kwargs['page_order'] = str(page_index + 2)
-            url_next = reverse('quizzer:page', kwargs=url_kwargs)
+    def render_page_questions(self, request, questionnaire_id, page_order, error_message=None, *args, **kwargs):
+        """Renders the page of questionnaire."""
+        questionnaire, page, questions = self.get_page_questions(questionnaire_id, page_order)
 
         context = {
             'questionnaire': questionnaire,
             'page': page,
             'questions': questions,
-            'url_next': url_next,
-            'error_meesage': error_message,
+            'error_message': error_message,
         }
-
         return render(request, 'page/answer.html', context)
 
-    def get(self, request, questionnaire_id, page_order, *args, **kwargs):
-        return self.render_page_questions(request, questionnaire_id, page_order, args, kwargs)
+    def render_page_result(self, request, questionnaire_id):
+        """Renders the result page of questionnaire."""
+        questionnaire = get_object_or_404(Questionnaire, pk=questionnaire_id)
+        return render(request, 'questionnaire/result.html', {'questionnaire': questionnaire})
 
-    def post(self, request, questionnaire_id, page_order, *args, **kwargs):
-        return self.render_page_questions(request, questionnaire_id, page_order, args, kwargs)
+    def validate_answer(self, post_data):
+        """Validates the user's input of a page questions."""
+        # TODO: Rigorous validating for submitted data.
+        if len(post_data) <= 1:
+            raise PageAnswerValidateException("You must answer to all questions in order to continue.")
+        return True

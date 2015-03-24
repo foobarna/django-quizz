@@ -7,7 +7,7 @@
         <p><strong>Error</strong> {{ error_message }}</p>
     {% endif %}
 
-    <form action="{{ url_next }}" method="POST">
+    <form method="POST">
     {% csrf_token %}
         {% if questions %}
         <ul>
