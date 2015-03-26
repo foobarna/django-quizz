@@ -1,7 +1,8 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from quizzerapp.models import Questionnaire, QuestionnairePage, Page, Question
-from django.views.generic import View
+from django.views.generic import View, ListView
 from django.core.urlresolvers import reverse
+from forms import QuestionsPageForm
 
 
 # Create your views here.
@@ -29,17 +30,20 @@ class PageAnswerValidateException(Exception):
 
 
 class PageView(View):
-    def get(self, request, questionnaire_id, page_order, *args, **kwargs):
+    def get(self, request, questionnaire_id, page_order):
         """GET method."""
         page_order = int(page_order)
-        return self.render_page_questions(request, questionnaire_id, page_order, args, kwargs)
+        return self.render_page_questions(request, questionnaire_id, page_order)
 
-    def post(self, request, questionnaire_id, page_order, *args, **kwargs):
+    def post(self, request, questionnaire_id, page_order):
         """POST method."""
         page_order = int(page_order)
-        try:
-            self.validate_answer(request.POST)
+        q, p, qs = self.get_page_questions(questionnaire_id, page_order)
+        form = QuestionsPageForm(request.POST, questions=qs)
+
+        if form.is_valid():
             total_pages = Page.objects.filter(questionnairepage__questionnaire__id=questionnaire_id).count()
+
             url_kwargs = {
                 'questionnaire_id': questionnaire_id
             }
@@ -50,48 +54,38 @@ class PageView(View):
                 url_next = reverse('quizzer:page', kwargs=url_kwargs)
 
             return redirect(url_next)
-        except PageAnswerValidateException as ex:
-            return self.render_page_questions(request, questionnaire_id, page_order, ex.message, args, kwargs)
+        else:
+            return self.render_page_questions_form(request, questionnaire_id, int(page_order), form)
 
     def get_page_questions(self, questionnaire_id, page_order):
         """Returns the Questionnaire, Questionnaire's Page and Page's Questions objects based on page order and
         questionnaire's id."""
-        page_index = page_order - 1
-        questionnaire = Questionnaire.objects.get(pk=questionnaire_id)
+        questionnaire = get_object_or_404(Questionnaire, pk=questionnaire_id)
+        page = questionnaire.ordered_page(page_order)
+        questions = page.ordered_questions
 
-        page = Page.objects \
-            .prefetch_related('questions') \
-            .order_by('questionnairepage__weight') \
-            .filter(questionnairepage__questionnaire=questionnaire) \
-            .all()[page_index]
-
-        questions = Question.objects \
-            .prefetch_related('answer_set') \
-            .order_by('pagequestion__weight') \
-            .filter(pagequestion__page=page) \
-            .all()
         return questionnaire, page, questions
 
-    def render_page_questions(self, request, questionnaire_id, page_order, error_message=None, *args, **kwargs):
+    def render_page_questions(self, request, questionnaire_id, page_order):
         """Renders the page of questionnaire."""
         questionnaire, page, questions = self.get_page_questions(questionnaire_id, page_order)
+
+        questions_form = QuestionsPageForm(questions=questions)
 
         context = {
             'questionnaire': questionnaire,
             'page': page,
-            'questions': questions,
-            'error_message': error_message,
+            'questions_form': questions_form,
         }
         return render(request, 'page/answer.html', context)
 
-    def render_page_result(self, request, questionnaire_id):
-        """Renders the result page of questionnaire."""
+    def render_page_questions_form(self, request, questionnaire_id, page_order, questions_form):
         questionnaire = get_object_or_404(Questionnaire, pk=questionnaire_id)
-        return render(request, 'questionnaire/result.html', {'questionnaire': questionnaire})
+        page = questionnaire.ordered_page(page_order)
 
-    def validate_answer(self, post_data):
-        """Validates the user's input of a page questions."""
-        # TODO: Rigorous validating for submitted data.
-        if len(post_data) <= 1:
-            raise PageAnswerValidateException("You must answer to all questions in order to continue.")
-        return True
+        context = {
+            'questionnaire': questionnaire,
+            'page': page,
+            'questions_form': questions_form,
+        }
+        return render(request, 'page/answer.html', context)

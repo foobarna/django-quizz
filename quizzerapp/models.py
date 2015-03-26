@@ -1,4 +1,5 @@
 from django.db import models
+from django.forms import CheckboxSelectMultiple, RadioSelect
 
 SHORT_TEXT = 200
 MEDIUM_TEXT = 500
@@ -18,6 +19,7 @@ class Question(models.Model):
                                      choices=QUESTION_TYPE_CHOICES,
                                      default=SINGLE)
 
+    @property
     def html_type(self):
         """Returns the html type of the question: radio or checkbox (default)."""
         html_types = {
@@ -26,8 +28,17 @@ class Question(models.Model):
         }
         return html_types.get(self.question_type, "checkbox")
 
+    @property
     def html_name(self):
         return "question-%s" % self.id
+
+    @property
+    def form_widget_type(self):
+        widget_types = {
+            Question.SINGLE: RadioSelect,
+            Question.MULTIPLE: CheckboxSelectMultiple,
+        }
+        return widget_types.get(self.question_type, "checkbox")
 
     def __unicode__(self):
         return self.question_text
@@ -49,6 +60,15 @@ class Page(models.Model):
     name = models.CharField(max_length=SHORT_TEXT)
     questions = models.ManyToManyField(Question, through="PageQuestion")
 
+    @property
+    def ordered_questions(self):
+        ordered_questions = self.questions \
+            .prefetch_related('answer_set') \
+            .order_by('pagequestion__weight') \
+            .all()
+
+        return ordered_questions
+
     def __unicode__(self):
         return self.name
 
@@ -69,6 +89,13 @@ class Questionnaire(models.Model):
     name = models.CharField(max_length=SHORT_TEXT)
     description = models.CharField(max_length=MEDIUM_TEXT)
     pages = models.ManyToManyField(Page, through="QuestionnairePage")
+
+    def ordered_page(self, page_order):
+        page_index = page_order - 1
+        ordered_page = self.pages \
+            .order_by('questionnairepage__weight') \
+            .all()[page_index]
+        return ordered_page
 
     def __unicode__(self):
         return self.name
