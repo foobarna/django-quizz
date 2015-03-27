@@ -1,5 +1,5 @@
 from django.db import models
-from django.forms import CheckboxSelectMultiple, RadioSelect
+from django.forms import CheckboxSelectMultiple, RadioSelect, ChoiceField, MultipleChoiceField
 
 SHORT_TEXT = 200
 MEDIUM_TEXT = 500
@@ -38,7 +38,15 @@ class Question(models.Model):
             Question.SINGLE: RadioSelect,
             Question.MULTIPLE: CheckboxSelectMultiple,
         }
-        return widget_types.get(self.question_type, "checkbox")
+        return widget_types.get(self.question_type, CheckboxSelectMultiple)
+
+    @property
+    def form_field_type(self):
+        field_types = {
+            Question.SINGLE: ChoiceField,
+            Question.MULTIPLE: MultipleChoiceField,
+        }
+        return field_types.get(self.question_type, MultipleChoiceField)
 
     def __unicode__(self):
         return self.question_text

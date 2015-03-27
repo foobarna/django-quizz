@@ -10,7 +10,6 @@
     <form method="POST">
     {% csrf_token %}
     {% if questions_form %}
-        {{ questions_form.errors }}
         {{ questions_form }}
     {% else %}
         <p>No questions are available.</p>

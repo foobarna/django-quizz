@@ -1,5 +1,4 @@
 from django import forms
-from quizzerapp.models import Question
 
 
 class QuestionsPageForm(forms.Form):
@@ -8,7 +7,7 @@ class QuestionsPageForm(forms.Form):
         questions = kwargs.pop('questions', [])
         super(QuestionsPageForm, self).__init__(*args, **kwargs)
         for question in questions:
-            self.fields[question.html_name] = forms.MultipleChoiceField(
+            self.fields[question.html_name] = question.form_field_type(
                 label=question,
                 required=True,
                 widget=question.form_widget_type,
