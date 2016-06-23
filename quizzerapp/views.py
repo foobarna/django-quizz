@@ -24,9 +24,14 @@ def questionnaire_result(request, questionnaire_id):
     return render(request, 'questionnaire/result.html', {'questionnaire': questionnaire})
 
 
-class PageAnswerValidateException(Exception):
-    """Exception for PageView."""
-    pass
+def page_restrict(func):
+    """Decorator for restricting questionnaire's page access."""
+    def restrict(*args, **kwargs):
+        # TODO make the checks
+
+        return func(*args, **kwargs)
+
+    return restrict
 
 
 class PageView(View):
@@ -42,8 +47,8 @@ class PageView(View):
         form = QuestionsPageForm(request.POST, questions=qs)
 
         if form.is_valid():
+            self.store_answers(request, questionnaire_id, form.cleaned_data)
             total_pages = Page.objects.filter(questionnairepage__questionnaire__id=questionnaire_id).count()
-
             url_kwargs = {
                 'questionnaire_id': questionnaire_id
             }
@@ -56,6 +61,19 @@ class PageView(View):
             return redirect(url_next)
         else:
             return self.render_page_questions_form(request, questionnaire_id, int(page_order), form)
+
+    def store_answers(self, request, q_id, cleaned_data):
+        q_key = q_id
+        answers = request.session.get(q_key, [])
+        current_answers = []
+        for a in cleaned_data.values():
+            if isinstance(a, list):
+                current_answers.extend(a)
+            else:
+                current_answers.append(a)
+
+        answers.extend(current_answers)
+        request.session[q_key] = answers
 
     def get_page_questions(self, questionnaire_id, page_order):
         """Returns the Questionnaire, Questionnaire's Page and Page's Questions objects based on page order and
